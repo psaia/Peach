@@ -42,7 +42,7 @@ PEACH.file_manager = {
                 break;
             default:
                 alert('An error occurred reading this file.');
-        };
+        }
     },
     
     on_load: function (f) {
