@@ -1,5 +1,6 @@
 /*
  * PEACH
+ * The Peach user interface. jQuery soup.
  * Author: Pete Saia
  */
 window.PEACH = window.PEACH || {};
