@@ -1,6 +1,8 @@
 /*
  * PEACH
  * File Manager
+ * Responsible for the client side downloading. Basically
+ * a wrapper for the File API.
  * Author: Pete Saia
  */
 window.PEACH = window.PEACH || {};
