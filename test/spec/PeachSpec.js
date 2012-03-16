@@ -9,7 +9,7 @@ describe('test migration', function () {
         it('should equal 40', function () {
             var peach = PEACH.migrate('the haystack does not matter now', 'http://test.com', 'http://test.com', null);
             peach._set_char_diff();
-            expect(peach._new_char_int('40')).toEqual(44);
+            expect(peach._new_char_int('40')).toEqual(40);
         });
     });
 });
