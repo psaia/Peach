@@ -6,6 +6,8 @@
   <title>Peach</title>
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width">
+  <link rel="icon" href="
+  favicon.ico">
   <link href='http://fonts.googleapis.com/css?family=Bitter:400,700' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -38,11 +40,11 @@
     </div>
     <footer class="footer">
         <h3>About This Utility</h3>
-        <p>As you probably know, migrating a WordPress database from one domain to another can be a bit of a hassle. Two major things must happen for it to be a seamless migration; Find &amp; replace the domain and fix the serialized url's containing the old domain. This tool does that for you. No need to run a bash script on every migration. Simply drag the sql dump into the square and set a new domain.</p>
+        <p>First of all, storing the domain name for your web application in the database is a really bad idea. For whatever reason WordPress does this. It also serializes content before it's inserted. So moving from one domain to another, most commonly from development to staging to production, can be hassle. Two major things must happen for it to be a seamless migration; Find &amp; replace the domain and fix the serialized url's containing the old domain. This tool does that for you. No need to run a bash script on every migration. Simply drag the sql dump into the square and set a new domain.</p>
         <h3>Support</h3>
-        <p>As of now this only works in <a href="https://www.google.com/chrome">Chrome</a>. Depending on usage, I will look at degrading to the others.</p>
+        <p>As of now this only works best in <a href="https://www.google.com/chrome">Chrome</a>. You are on your own with the others. Depending on usage, I will look at degrading.</p>
         <aside>
-            Made by <a href="http://petesaia.com">Pete Saia</a>. Made possible by <a href="http://www.html5rocks.com/en/">JavaScript & HTML5</a>.
+            Made by <a href="http://petesaia.com">Pete Saia</a>. Made possible by <a href="http://www.html5rocks.com/en/">JavaScript &amp; HTML5</a>.
         </aside>
     </footer>
     <script src="assets/js/lib/jquery.js"></script>
