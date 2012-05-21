@@ -163,7 +163,7 @@ var dropbox_handler = function (e) {
         var file = e.originalEvent.dataTransfer.files;
         var reader = new FileReader();
         
-        if (!file[0] || !file[0].fileName.match(/\.sql/))
+        if (!file[0] || !file[0].fileName || !file[0].fileName.match(/\.sql/))
             return alert('Must be a .sql file.');
         
         if (file.length > 1)
