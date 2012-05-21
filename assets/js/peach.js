@@ -162,8 +162,8 @@ var dropbox_handler = function (e) {
     if (e.type ===  'drop') {
         var file = e.originalEvent.dataTransfer.files;
         var reader = new FileReader();
-        
-        if (!file[0] || !file[0].fileName || !file[0].fileName.match(/\.sql/))
+        console.log(file);
+        if (!file[0] || !file[0].fileName.match(/\.sql/))
             return alert('Must be a .sql file.');
         
         if (file.length > 1)
