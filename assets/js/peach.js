@@ -172,7 +172,7 @@ var dropbox_handler = function (e) {
         if (file[0].fileSize > MAXSIZE)
             return alert('File is too large. Perhaps try deleting the cache?');
         
-        filename = 'migrated-'+file[0].name+'.sql';
+        filename = 'migrated-'+file[0].name;
         PEACH.file_manager.read(file[0], scenes.show_form);
         $dropbox_section.activity({
             valign: 'bottom',
