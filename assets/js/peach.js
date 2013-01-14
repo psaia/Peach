@@ -115,35 +115,49 @@ var clear_output = function () {
 };
 
 var migrate_btn_click_handler = function () {
-    if ($.trim($new_domain.val()).length < 1 || $.trim($old_domain.val()).length < 1)
+    if ( $.trim($new_domain.val()).length < 1 || $.trim($old_domain.val()).length < 1 )
         return alert('You must provide both fields.');
     
-    if (!haystack) 
+    if (!haystack)
         return alert('Something is wrong, please refresh and start over.');
     
     clear_output();
     
     var on_complete = function (stack) {
+        var blob;
         window.URL = window.webkitURL || window.URL;
-        window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder ||
-                            window.MozBlobBuilder;
-        var bb = new BlobBuilder();
-        bb.append(stack);
+        if ( window.Blob ) {
+
+            // The new way.
+            blob = new Blob([stack], { 'type' : 'text\/plain' });
+
+        } else {
+
+            // Try the deprecated way.
+            window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+            if ( !window.BlobBuilder )
+                return alert('Please upgrade to a better browser. Perhaps one that supports Blob().');
+
+            var bb = new window.BlobBuilder();
+            bb.append(stack);
+            blob = bb.getBlob('text/plain');
+        }
+
         $download.attr('download', filename);
-        $download.attr('href', window.URL.createObjectURL(bb.getBlob('text/plain')));
+        $download.attr('href', window.URL.createObjectURL(blob));
         activate_btn($download);
         show_output();
     };
     
     // Convert db.
     var m = PEACH.migrate(
-        haystack, 
-        $old_domain.val(), 
+        haystack,
+        $old_domain.val(),
         $new_domain.val(),
         on_complete
     );
     
-    if (m) 
+    if (m)
         m.init();
     
     show_output();
@@ -156,14 +170,26 @@ var cancel_btn_click_handler = function () {
 };
 
 var dropbox_handler = function (e) {
-    e.stopPropagation();  
+    e.stopPropagation();
     e.preventDefault();
     
     if (e.type ===  'drop') {
         var file = e.originalEvent.dataTransfer.files;
         var reader = new FileReader();
-        
-        if (!file[0] || !file[0].fileName || !file[0].fileName.match(/\.sql/))
+        var fileName;
+        if ( file[0] ) {
+            if ( file[0].fileName ) {
+                fileName = file[0].fileName;
+            } else if ( file[0].name ) {
+                fileName = file[0].name;
+            } else {
+                return alert('Could not detect file name. This could be a browser issue.');
+            }
+        } else {
+            return alert('Sorry, no file was detected. Perhaps try a better browser.');
+        }
+
+        if ( !fileName.match(/\.sql/) )
             return alert('Must be a .sql file.');
         
         if (file.length > 1)
@@ -172,7 +198,7 @@ var dropbox_handler = function (e) {
         if (file[0].fileSize > MAXSIZE)
             return alert('File is too large. Perhaps try deleting the cache?');
         
-        filename = 'migrated-'+file[0].fileName;
+        filename = 'migrated-' + fileName;
         PEACH.file_manager.read(file[0], scenes.show_form);
         $dropbox_section.activity({
             valign: 'bottom',
