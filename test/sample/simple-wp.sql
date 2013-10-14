@@ -1,10 +1,8 @@
-(1,'siteurl','http://atestsite12.dev','yes'),
-'s:45:\"http://atestsite12.dev12/wp-content/something\";'
-'s:45:\"http://atestsite12.dev12/wp-content/something\";'
-'s:45:\"http://atestsite12.dev12/wp-content/something\";'
-'s:48:\"http://atestsite12.dev12/wp-content/something123\";'
-(43,'recently_edited','a:3:{i:0;s:76:\"/var/www/atestsite12/staging/wp-content/themes/random-theme/random/style.css\";i:1;s:88:\"/Users/123456789012/Sites/src/random1234/wp-content/themes/random-theme/random/style.css\";i:2;s:0:\"\";}','no'),
-(43,'recently_edited','a:3:{i:0;s:76:\"/var/www/atestsite12/staging/wp-content/themes/random-theme/random/style.css\";i:1;s:88:\"/Users/123456789012/Sites/src/random1234/wp-content/themes/random-theme/random/style.css\";i:2;s:0:\"\";}','no'),
+(1,'siteurl','http://atestsite.dev','yes'),
+'s:41:"http://atestsite.dev/wp-content/something";'
+'s:41:"http://atestsite.dev/wp-content/something";'
+'s:41:"http://atestsite.dev/wp-content/something";'
+'s:44:"http://atestsite.dev/wp-content/something123";'
 
 # A simple replacement to add to the replacement count.
-123http://atestsite12.dev123
+http://atestsite.dev

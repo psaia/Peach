@@ -9,4 +9,3 @@
 # No escapes, multiple domains.
 'a:1:{s:82:"<a href="http://sample.com/123">peach</a><a href="http://sample.com/123">peach</a>";}'
 
-'a:1:{s:82:"<a href="http://sample.com/123">peach</a><a href="http://sample.com/123">peach</a>";}'

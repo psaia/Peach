@@ -48,11 +48,10 @@ var scenes = {
         haystack = freshhaystack;
         
         // Attempt to get old domain to prepopulate.
-        var matches = haystack.match(/('siteurl',')([^']+)/);
-        var old_domain = (matches && matches[2]) ? matches[2] : '';
+        var old_domain = Peach.wp_domain(haystack);
         
         // Populate old domain field... or not.
-        if (old_domain.length > 0) {
+        if (old_domain && old_domain.length > 0) {
             $new_domain.focus();
             $old_domain.val(old_domain);
         } else {
@@ -123,44 +122,42 @@ var migrate_btn_click_handler = function () {
     
     clear_output();
     
-    var on_complete = function (stack) {
-        var blob;
-        window.URL = window.webkitURL || window.URL;
-        if ( window.Blob ) {
-
-            // The new way.
-            blob = new Blob([stack], { 'type' : 'text\/plain' });
-
-        } else {
-
-            // Try the deprecated way.
-            window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
-            if ( !window.BlobBuilder )
-                return alert('Please upgrade to a better browser. Perhaps one that supports Blob().');
-
-            var bb = new window.BlobBuilder();
-            bb.append(stack);
-            blob = bb.getBlob('text/plain');
-        }
-
-        $download.attr('download', filename);
-        $download.attr('href', window.URL.createObjectURL(blob));
-        activate_btn($download);
-        show_output();
-    };
-    
     // Convert db.
-    var m = PEACH.migrate(
-        haystack,
-        $old_domain.val(),
-        $new_domain.val(),
-        on_complete
-    );
+    try {
+        var m = Peach.migrate(
+            haystack,
+            $old_domain.val(),
+            $new_domain.val()
+        );
+    } catch (e) {
+        Peach.log('Error!');
+        return;
+    }
     
-    if (m)
-        m.init();
-    
+    var blob;
+    window.URL = window.webkitURL || window.URL;
+    if ( window.Blob ) {
+
+        // The new way.
+        blob = new Blob([m.new_haystack], { 'type' : 'text\/plain' });
+
+    } else {
+
+        // Try the deprecated way.
+        window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+        if ( !window.BlobBuilder )
+            return alert('Please upgrade to a better browser. Perhaps one that supports Blob().');
+
+        var bb = new window.BlobBuilder();
+        bb.append(m.new_haystack);
+        blob = bb.getBlob('text/plain');
+    }
+
+    $download.attr('download', filename);
+    $download.attr('href', window.URL.createObjectURL(blob));
+    activate_btn($download);
     show_output();
+    
     return false;
 };
 
@@ -223,11 +220,10 @@ $dropbox_section.on('dragenter dragexit dragover drop', dropbox_handler);
 $cancel.on('click', cancel_btn_click_handler).trigger('click');
 $old_domain.add($new_domain).on('keyup press', input_keyup_handler);
 
-
-PEACH.log = function (str) {
+// Overwrite Peach's log.
+Peach.log = function (str) {
     if (window.console && PEACH.verbose)
         console.log(str);
-    
     PEACH.output.push(str);
 };
 
