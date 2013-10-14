@@ -57,15 +57,27 @@
           stack,
           domainCount,
           escapedDomain = reg_escape(this.old_domain),
-          exp = new RegExp("s:(\d+):\"(.*"+escapedDomain+".*)\";", "ig"),
+          exp = new RegExp("s:(\\d+):\\\\?\"([^;]*"+escapedDomain+"[^;]*)\\\\?\";", "gi"),
           found = 0;
-        console.log(exp);
-        while ((serials = exp.exec(this.new_haystack)) != null) {  
-          console.log(serials);
+
+        while ((serials = exp.exec(this.new_haystack)) != null) {
+
+          // Count the occurences of the domain in the string.
           domainCount = serials[2].match(new RegExp(escapedDomain, "gi")).length;
+
+          // Split the haystack on the current find.
           stack = this._split_stack(exp.lastIndex - serials[0].length, exp.lastIndex);
-          stack[1] = this._replace_char_int(stack[1], this._new_char_int(serials[1], domainCount));
-          stack[1] = stack[1].replace(this.old_domain, this.new_domain+this.identifier);
+          
+          // Replace all instances.
+          stack[1] = stack[1].replace(new RegExp(this.old_domain, "gi"), this.new_domain);
+
+          // Get the new length.
+          stack[1] = stack[1].replace(/(s:)?\d+/, function($0, $1) {
+            return $1 ?
+              ($1 + new RegExp("s:(\\d+):\\\\?\"([^;]*)\\\\?\";", "gi").exec(stack[1])[2].length) :
+              $0;
+          });
+
           this.new_haystack = stack.join('');
           found++;
         }
@@ -98,23 +110,17 @@
       return stack;
     },
     
-    _new_char_int: function (charint, domainCount) {
+    _new_char_int: function (charint) {
       var old_int = parseInt(charint, 10),
           new_int;
       if (this.char_diff > 0) {
-        new_int = old_int - (Math.abs(this.char_diff) * domainCount);
+        new_int = old_int - Math.abs(this.char_diff);
       } else if (this.char_diff < 0) {
-        new_int = old_int + (Math.abs(this.char_diff) * domainCount);
+        new_int = old_int + Math.abs(this.char_diff);
       } else {
         new_int = old_int;
       }
       return new_int;
-    },
-    
-    _replace_char_int: function (str, char_int) {
-      return str.replace(/(s:)?\d+/, function($0, $1) {
-        return $1 ? $1 + char_int : $0;
-      });
     },
     
     _remove_identifier: function () {
@@ -122,7 +128,7 @@
     },
     
     _set_char_diff: function () {
-      this.char_diff = this.old_domain.length - this.new_domain.length;
+      this.char_diff = this.new_domain.length - this.old_domain.length;
       Peach.log('Domain character difference: '+this.char_diff+'.');
     }
   };
@@ -155,10 +161,7 @@
   }
 
   function repeat(str, n) {
-    // n = n > 0 ? n + 1 : 0; // Allow 0 repeats, else add 1.
     n = n || 1;
     return Array(n+1).join(str);
   }
 })();
-
-
