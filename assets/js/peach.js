@@ -1,236 +1,164 @@
 /*
- * PEACH
- * The Peach user interface. jQuery soup.
+ * Peach
  * Author: Pete Saia
  */
-window.PEACH = window.PEACH || {};
 
-(function (PEACH) {
-'use strict';
+(function () {
+  'use strict';
 
-/**
- * Output Messages
- */
-PEACH.verbose = false;
-PEACH.output = [];
+  // Create a local.
+  var Peach = {}; 
 
-/**
- * Consts
- */
-var SLIDESPEED = 250;
-var MAXSIZE    = 1073741824; // gb
+  // Make Peach a module for Node.
+  if (typeof exports !== 'undefined') {
+    exports = module.exports = Peach;
+  } else {
+    this.Peach = Peach;
+  }
 
-/**
- * Vars
- */
-var $dropbox_section = $('#upload');
-var $form_section    = $('#domain-form');
-var $old_domain      = $('input[name="old"]');
-var $new_domain      = $('input[name="new"]');
-var $cancel          = $('.cancel');
-var $download        = $('.download');
-var $migrate_btn     = $('button');
-var $output_box      = $('.output');
+  Peach.migrate = function (haystack, old_domain, new_domain) {
+    if (!haystack || !old_domain || !new_domain)
+        throw new Error("A haystack, old domain, and new domain is required.");
+    
+    if (!(this instanceof Peach.migrate))
+        return new Peach.migrate(haystack, old_domain, new_domain);
+    
+    this.haystack         = haystack;
+    this.new_haystack     = haystack;
+    this.old_domain       = old_domain;
+    this.new_domain       = new_domain;
+    this.serialized_count = 0;
+    this.replaced_count   = 0;
+    this.char_diff        = null;
+    this.processed        = false;
+    this.identifier       = "§∆";
+    
+    Peach.log('Migrating from '+old_domain+' to '+new_domain+'.');
+  };
 
-var haystack = null;
-var filename = null;
-
-/**
- * Constants
- */
-var scenes = {
-    // After the file has been loaded, display form.
-    show_form: function (freshhaystack) {
-        if (!freshhaystack)
-            return;
-        
-        // Set global var.
-        haystack = freshhaystack;
-        
-        // Attempt to get old domain to prepopulate.
-        var matches = haystack.match(/('siteurl',')([^']+)/);
-        var old_domain = (matches && matches[2]) ? matches[2] : '';
-        
-        // Populate old domain field... or not.
-        if (old_domain.length > 0) {
-            $new_domain.focus();
-            $old_domain.val(old_domain);
-        } else {
-            $old_domain.focus();
-        }
-        
-        // Animate.
-        $dropbox_section.animate({
-            left:'-50%'
-        }, SLIDESPEED);
-        $form_section.animate({
-            left:'50%'
-        }, SLIDESPEED);
+  Peach.migrate.prototype = {
+    init: function () {
+      this._set_char_diff();
+      this._handle_serializations();
+      this._handle_other_domains();
+      this._remove_identifier();
+      this._processed = true;
+      
+      Peach.log('Complete!');
+      return this;
     },
-    show_dropbox: function () {
-        haystack = null;
-        deactivate_btn($download);
-        deactivate_btn($migrate_btn);
-        clear_output();
-        $dropbox_section.animate({
-            left:'50%'
-        }, SLIDESPEED);
-        $form_section.animate({
-            left:'150%'
-        }, SLIDESPEED);
-        $dropbox_section.activity(false);
-    }
-};
-
-
-var deactivate_btn = function ($btn) {
-    $btn.stop(true,true).animate({
-        'opacity': 0.4
-    }, 200)
-    .off('click')
-    .css('cursor', 'default')
-    .removeClass('active');
-};
-var activate_btn = function ($btn) {
-    $btn.stop(true,true).animate({
-        'opacity': 1
-    }, 200)
-    .off('click')
-    .css('cursor', 'pointer')
-    .addClass('active');
-    if ($btn === $migrate_btn)
-        $btn.on('click', migrate_btn_click_handler);
-};
-
-var show_output = function () {
-    var len = PEACH.output.length;
-    $output_box.html('');
-    for (var i = 0; len > i; i++)
-        $output_box.append('<span>'+PEACH.output[i]+'</span>');
-};
-
-var clear_output = function () {
-    $output_box.html('');
-    PEACH.output = [];
-};
-
-var migrate_btn_click_handler = function () {
-    if ( $.trim($new_domain.val()).length < 1 || $.trim($old_domain.val()).length < 1 )
-        return alert('You must provide both fields.');
     
-    if (!haystack)
-        return alert('Something is wrong, please refresh and start over.');
+    get_processed_file: function () {
+      return this._processed ? this.new_haystack : null;
+    },
     
-    clear_output();
-    
-    var on_complete = function (stack) {
-        var blob;
-        window.URL = window.webkitURL || window.URL;
-        if ( window.Blob ) {
-
-            // The new way.
-            blob = new Blob([stack], { 'type' : 'text\/plain' });
-
-        } else {
-
-            // Try the deprecated way.
-            window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
-            if ( !window.BlobBuilder )
-                return alert('Please upgrade to a better browser. Perhaps one that supports Blob().');
-
-            var bb = new window.BlobBuilder();
-            bb.append(stack);
-            blob = bb.getBlob('text/plain');
+    _handle_serializations: function () {
+      var serials,
+          stack,
+          domainCount,
+          escapedDomain = reg_escape(this.old_domain),
+          exp = new RegExp("s:(\d+):\"(.*"+escapedDomain+".*)\";", "ig"),
+          found = 0;
+        console.log(exp);
+        while ((serials = exp.exec(this.new_haystack)) != null) {  
+          console.log(serials);
+          domainCount = serials[2].match(new RegExp(escapedDomain, "gi")).length;
+          stack = this._split_stack(exp.lastIndex - serials[0].length, exp.lastIndex);
+          stack[1] = this._replace_char_int(stack[1], this._new_char_int(serials[1], domainCount));
+          stack[1] = stack[1].replace(this.old_domain, this.new_domain+this.identifier);
+          this.new_haystack = stack.join('');
+          found++;
         }
+      this.serialized_count = found;
+      Peach.log(found + ' serialized links found.');
+    },
+    
+    _handle_other_domains: function () {
+      var exp = new RegExp(reg_escape(this.old_domain)+"(.+?(\r|\n|'|\"))?", "gi"),
+        matches = 0,
+        escapedDomain = reg_escape(this.old_domain),
+        that = this;
 
-        $download.attr('download', filename);
-        $download.attr('href', window.URL.createObjectURL(blob));
-        activate_btn($download);
-        show_output();
-    };
-    
-    // Convert db.
-    var m = PEACH.migrate(
-        haystack,
-        $old_domain.val(),
-        $new_domain.val(),
-        on_complete
-    );
-    
-    if (m)
-        m.init();
-    
-    show_output();
-    return false;
-};
-
-var cancel_btn_click_handler = function () {
-    scenes.show_dropbox();
-    return false;
-};
-
-var dropbox_handler = function (e) {
-    e.stopPropagation();
-    e.preventDefault();
-    
-    if (e.type ===  'drop') {
-        var file = e.originalEvent.dataTransfer.files;
-        var reader = new FileReader();
-        var fileName;
-        if ( file[0] ) {
-            if ( file[0].fileName ) {
-                fileName = file[0].fileName;
-            } else if ( file[0].name ) {
-                fileName = file[0].name;
-            } else {
-                return alert('Could not detect file name. This could be a browser issue.');
-            }
-        } else {
-            return alert('Sorry, no file was detected. Perhaps try a better browser.');
+      this.new_haystack = this.new_haystack.replace(exp, function ($0, $1) {
+        if ($0.indexOf(that.identifier) === -1) {
+          matches++;
+          return $0.replace(new RegExp(escapedDomain, "gi"), that.new_domain);
         }
-
-        if ( !fileName.match(/\.sql/) )
-            return alert('Must be a .sql file.');
-        
-        if (file.length > 1)
-            return alert('Only one file at a time, please.');
-        
-        if (file[0].fileSize > MAXSIZE)
-            return alert('File is too large. Perhaps try deleting the cache?');
-        
-        filename = 'migrated-' + fileName;
-        PEACH.file_manager.read(file[0], scenes.show_form);
-        $dropbox_section.activity({
-            valign: 'bottom',
-            padding: 60,
-            opacity: 0.5
-        });
-    }
-};
-
-var input_keyup_handler = function () {
-    if ($old_domain.val().length > 0 && $new_domain.val().length > 1) {
-        activate_btn($migrate_btn);
-    } else {
-        deactivate_btn($migrate_btn);
-    }
-};
-
-/*
- * Event listeners.
-*/
-$dropbox_section.on('dragenter dragexit dragover drop', dropbox_handler);
-$cancel.on('click', cancel_btn_click_handler).trigger('click');
-$old_domain.add($new_domain).on('keyup press', input_keyup_handler);
-
-
-PEACH.log = function (str) {
-    if (window.console && PEACH.verbose)
-        console.log(str);
+        return $0;
+      });
+      this.replaced_count = matches;
+      Peach.log('Replaced '+matches+' other links.');
+    },
     
-    PEACH.output.push(str);
-};
+    _split_stack: function (from, to) {
+      var stack = [];
+      stack.push(this.new_haystack.substring(0,from));
+      stack.push(this.new_haystack.substring(from, to));
+      stack.push(this.new_haystack.substring(to));
+      return stack;
+    },
+    
+    _new_char_int: function (charint, domainCount) {
+      var old_int = parseInt(charint, 10),
+          new_int;
+      if (this.char_diff > 0) {
+        new_int = old_int - (Math.abs(this.char_diff) * domainCount);
+      } else if (this.char_diff < 0) {
+        new_int = old_int + (Math.abs(this.char_diff) * domainCount);
+      } else {
+        new_int = old_int;
+      }
+      return new_int;
+    },
+    
+    _replace_char_int: function (str, char_int) {
+      return str.replace(/(s:)?\d+/, function($0, $1) {
+        return $1 ? $1 + char_int : $0;
+      });
+    },
+    
+    _remove_identifier: function () {
+      this.new_haystack = this.new_haystack.replace(new RegExp(this.identifier, "g"), '');
+    },
+    
+    _set_char_diff: function () {
+      this.char_diff = this.old_domain.length - this.new_domain.length;
+      Peach.log('Domain character difference: '+this.char_diff+'.');
+    }
+  };
 
-})(window.PEACH);
+  Peach.wp_domain = function (str) {
+    if (typeof str !== "string") {
+      throw new Error("A string is required.");
+    }
+    var matches = str.match(/('siteurl',')([^']+)/);
+    return (matches && matches[2]) ? matches[2] : '';
+  }
+  
+  Peach.log = function (str) {
+    if (typeof window !== "undefined" && window.console) {
+      window.console.log(str);
+    }
+  }
+
+  function reg_escape(str) {
+    var specials = [
+      '/', '.', '*', '+', '?', '|',
+      '(', ')', '[', ']', '{', '}'
+    ],
+      len = specials.length;
+    
+    for (var i = 0; len > i; i++) {
+      str = str.replace(new RegExp("\\"+specials[i], "gi"), "\\"+specials[i]);
+    }
+    return str; 
+  }
+
+  function repeat(str, n) {
+    // n = n > 0 ? n + 1 : 0; // Allow 0 repeats, else add 1.
+    n = n || 1;
+    return Array(n+1).join(str);
+  }
+})();
 
 
