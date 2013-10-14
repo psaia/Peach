@@ -10,12 +10,21 @@ For front-end use see ui.js in the assets directory. It's probably easier just t
 Peach can be useful for continuous integration when working with Wordpress sites.
 
 ```javascript
-var Peach = require("peach");
 var dbdump = fs.readFileSync("./old-database.sql");
-var oldDomain = Peach.wp_domain(dbdump);
-var newDbDump = Peach.migrate(dbdump, oldDomain, "http://your-new-domain.com");
+var Peach = require("peach");
 
-// ... Do stuff with newDbDump!
+var oldDomain = Peach.wp_domain(dbdump); // Helper to get current domain name.
+var migration = Peach.migrate(dbdump, oldDomain, "http://your-new-domain.com");
+
+migration.processed_file(); // The new sql file.
+
+// Extra public properties.
+migration.old_domain;
+migration.new_domain;
+migration.serialized_count; // Number of serializations.
+migration.replaced_count; // Number of replacements.
+migration.char_diff; // Difference in characters. e.g. -4 || 2 || -4
+
 ```
 # Testing
 Tests are wrtten in mocha.

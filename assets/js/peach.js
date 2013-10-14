@@ -45,7 +45,7 @@
       return this;
     },
     
-    get_processed_file: function () {
+    processed_file: function () {
       return this.new_haystack;
     },
     
