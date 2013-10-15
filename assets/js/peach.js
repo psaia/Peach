@@ -1,15 +1,18 @@
 /*
  * Peach
- * Author: Pete Saia
+ * https://github.com/petesaia/Peach
+ * A synchronous tool which allows a safe way to find and replace
+ * a string within a database dump containing serialized objects.
+ *
+ * Online version:
+ * http://petesaia.github.io/Peach/
  */
 
 (function () {
   'use strict';
 
-  // Create a local.
   var Peach = {}; 
 
-  // Make Peach a module for Node.
   if (typeof exports !== 'undefined') {
     exports = module.exports = Peach;
   } else {
@@ -40,20 +43,16 @@
       this._set_char_diff();
       this._handle_serializations();
       this._handle_other_domains();
-      
       Peach.log('Migration complete!');
       return this;
     },
-    
     processed_file: function () {
       return this.new_haystack;
     },
-    
     _handle_serializations: function () {
       var that = this;
       var escapedDomain = reg_escape(this.old_domain);
       var lines = this.new_haystack.split(/(\n|\r|\r\n|\n\r)/);
-
       for (var i = 0, len = lines.length; i < len; i++) {
         lines[i] = lines[i].replace(
           /s:(\d+):\\?\"(.*?)\\?";/gi,
@@ -71,56 +70,42 @@
       this.new_haystack = lines.join("");
       Peach.log(this.serialized_count + ' serialized links found.');
     },
-    
     _handle_other_domains: function () {
-      var escapedDomain = reg_escape(this.old_domain);
       var that = this;
-
       this.new_haystack = this.new_haystack.replace(
         new RegExp(reg_escape(this.old_domain), "gi"),
-        function ($0, $1) {
+        function () {
           that.replaced_count++;
           return that.new_domain;
         }
       );
       Peach.log('Replaced '+this.replaced_count+' other links.');
     },
-    
     _set_char_diff: function () {
       this.char_diff = this.new_domain.length - this.old_domain.length;
       Peach.log('Domain character difference: '+this.char_diff+'.');
     }
   };
-
   Peach.wp_domain = function (str) {
     if (typeof str !== "string") {
       throw new Error("A string is required.");
     }
     var matches = str.match(/('|"')siteurl('|"')[^"']+('|"')([^'"]+)('|"').+/);
     return (matches && matches[4]) ? matches[4] : '';
-  }
-  
+  };
   Peach.log = function (str) {
     if (typeof window !== "undefined" && window.console) {
       window.console.log(str);
     }
-  }
-
+  };
   function reg_escape(str) {
     var specials = [
       '/', '.', '*', '+', '?', '|',
       '(', ')', '[', ']', '{', '}'
-    ],
-      len = specials.length;
-    
-    for (var i = 0; len > i; i++) {
+    ];
+    for (var i = 0, len = specials.length; len > i; i++) {
       str = str.replace(new RegExp("\\"+specials[i], "gi"), "\\"+specials[i]);
     }
     return str; 
-  }
-
-  function repeat(str, n) {
-    n = n || 1;
-    return Array(n+1).join(str);
   }
 }).call(this);
