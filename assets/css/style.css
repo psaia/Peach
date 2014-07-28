@@ -72,6 +72,8 @@ body { background:url(../images/tile.png) repeat; text-align:center; }
     .header .three { color:#CC821E; }
 
 
+.beer { text-align: center; }
+.beer form { display: block; margin: 10px auto 0; }
 .pane { position:relative; height:404px; width:auto; overflow:hidden; }
 	.pane .copy { display:table-cell; vertical-align:middle; }
 	.pane h2 { margin:0; font-weight:400; color:#585832; font-size:24px; font-family:'Bitter', serif; }
