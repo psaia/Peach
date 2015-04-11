@@ -1,5 +1,5 @@
 {
-  "name": "PeachTests",
+  "name": "Peach",
   "version": "0.0.0",
   "description": "",
   "main": "index.js",
@@ -7,7 +7,11 @@
     "coffee-script": "~1.6.3"
   },
   "devDependencies": {
-    "mocha": "~1.13.0"
+    "mocha": "~1.13.0",
+    "grunt": "~0.4.5",
+    "grunt-contrib-uglify": "~0.9.1",
+    "grunt-contrib-cssmin": "~0.12.2",
+    "grunt-contrib-concat": "~0.5.1"
   },
   "scripts": {
     "test": "mocha --reporter spec --compilers coffee:coffee-script"
