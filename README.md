@@ -4,7 +4,7 @@ As you probably know, migrating a WordPress database from one domain to another 
 # Use
 
 ### Frontend
-For front-end use see ui.js in the assets directory. It's probably easier just to use the online verson: http://petesaia.github.io/Peach/
+For front-end use see ui.js in the assets directory. It's probably easier just to use the online verson: http://psaia.github.io/Peach/
 
 ### Backend
 Peach can be useful for continuous integration when working with Wordpress sites.
